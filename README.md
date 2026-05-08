@@ -1,4 +1,4 @@
-# Deepfake Detection Using GAN with Confidence Scoring
+# EfficientNet-based Deepfake Detection with Confidence Scoring
 
 **Group Number:** 31  
 **Guide:** Prof. Abhishek Majumdar  
