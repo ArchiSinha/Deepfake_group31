@@ -95,6 +95,21 @@ def user():
         return redirect(url_for("login"))
 
 
+@app.route("/detect")
+def detect():
+    return render_template("detect.html")
+
+
+@app.route("/results")
+def results():
+    return render_template("results.html")
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
 @app.route("/logout")
 def logout():
     session.pop("user", None)
