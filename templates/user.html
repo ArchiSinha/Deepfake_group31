@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <section class="section">
+    <div class="container card">
+      <h1>Welcome, {{ user }}!</h1>
+      <p style="color:var(--text-secondary); margin-top:12px;">You are logged in. Use the navigation above to explore the Detect, Results, and About pages.</p>
+      <div style="margin-top:22px; display:flex; gap:12px; flex-wrap:wrap;">
+        <a href="{{ url_for('profile') }}" class="btn btn-outline">Edit Profile</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
