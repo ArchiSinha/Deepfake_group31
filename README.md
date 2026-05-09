@@ -5,10 +5,11 @@
 **College:** Academy of Technology (MAKAUT Affiliated)
 
 ## Team Members
-- Member 1 — Roll No: TBD
-- Member 2 — Roll No: TBD
-- Member 3 — Roll No: TBD
-- Member 4 — Roll No: TBD
+- Rounak Ghosal — Roll No: 169001230071
+- Dyutimay Ghosh — Roll No: 16900123177
+- Bidisha Maji — Roll No: 16900123170
+- Archisman Sinha — Roll No: 16900123021
+- Bimal Kr. Mahato — Roll No: 16900123032
 
 ## Tech Stack
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
