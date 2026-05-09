@@ -1,4 +1,5 @@
- import torch
+import torch.nn.functional as F 
+import torch
 
 class CFG:
     # Paths
@@ -8,7 +9,7 @@ class CFG:
     CKPT_DIR     = "/content/drive/MyDrive/deepfake_project/checkpoints"
 
     # Training
-    IMG_SIZE          = 224
+    IMG_SIZE          = 256
     BATCH_SIZE        = 16
     NUM_EPOCHS        = 50
     LR_G              = 2e-4

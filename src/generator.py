@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class ConvBlock(nn.Module):
@@ -20,8 +21,8 @@ class ConvBlock(nn.Module):
 class Generator(nn.Module):
     """
     U-Net Generator
-    Input:  (B, 3, 224, 224)
-    Output: (B, 3, 224, 224)
+    Input:  (B, 3, 256, 256)
+    Output: (B, 3, 256, 256)
     """
     def __init__(self, in_c=3, features=64):
         super().__init__()
@@ -61,9 +62,9 @@ class Generator(nn.Module):
         s6 = self.e6(s5)
         bn = self.bottleneck(s6)
         d = self.d1(bn)
-        d = self.d2(torch.cat([d, s6], dim=1))
-        d = self.d3(torch.cat([d, s5], dim=1))
-        d = self.d4(torch.cat([d, s4], dim=1))
-        d = self.d5(torch.cat([d, s3], dim=1))
-        d = self.d6(torch.cat([d, s2], dim=1))
-        return self.out(torch.cat([d, s1], dim=1)) 
+        d = self.d2(torch.cat([F.interpolate(d, s6.shape[2:]), s6], dim=1))
+        d = self.d3(torch.cat([F.interpolate(d, s5.shape[2:]), s5], dim=1))
+        d = self.d4(torch.cat([F.interpolate(d, s4.shape[2:]), s4], dim=1))
+        d = self.d5(torch.cat([F.interpolate(d, s3.shape[2:]), s3], dim=1))
+        d = self.d6(torch.cat([F.interpolate(d, s2.shape[2:]), s2], dim=1))
+        return self.out(torch.cat([F.interpolate(d, s1.shape[2:]), s1], dim=1))
