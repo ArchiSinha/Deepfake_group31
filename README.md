@@ -3,7 +3,7 @@
 **Group 31 | Academy of Technology | Final Year Project**
 
 ## Members
-- Rounak Ghosal (169001230071)
+- Rounak Ghosal (16900123071)
 - Dyutimay Ghosh (16900123177)
 - Bidisha Maji (16900123170)
 - Archisman Sinha (16900123021)
