@@ -20,4 +20,4 @@ Prof. Abhishek Majumdar, Associate Professor, CSE
 | 03_evaluation |  | Metrics, ROC, confidence scoring |
 
 ## Tech Stack
-PyTorch · EfficientNet-B0 · MTCNN · OpenCV · Google Colab T4
+PyTorch · EfficientNet-B0 · MTCNN · OpenCV · Google Colab T4 . Flask . JavaScript
