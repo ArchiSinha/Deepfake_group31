@@ -1,16 +1,15 @@
-import torch.nn.functional as F 
 import torch
 
 class CFG:
-    # Paths
-    DATA_ROOT    = "/content/drive/MyDrive/deepfake_project/data"
+    # Local paths
+    DATA_ROOT    = "C:/deepfake_project/data"
     REAL_DIR     = f"{DATA_ROOT}/real"
     FAKE_DIR     = f"{DATA_ROOT}/fake"
-    CKPT_DIR     = "/content/drive/MyDrive/deepfake_project/checkpoints"
+    CKPT_DIR     = "C:/deepfake_project/checkpoints"
 
     # Training
     IMG_SIZE          = 256
-    BATCH_SIZE        = 16
+    BATCH_SIZE        = 4
     NUM_EPOCHS        = 50
     LR_G              = 2e-4
     LR_D              = 2e-4
