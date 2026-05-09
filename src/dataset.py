@@ -29,13 +29,16 @@ def get_transforms(img_size, mode="train"):
 
 class DeepfakeImageDataset(Dataset):
     """Label: 1 = Real, 0 = Fake"""
-    def __init__(self, real_dir, fake_dir, transform=None):
-        self.samples = (
+    def __init__(self, real_dir, fake_dir, transform=None, max_samples=10000):
+        real = (
             [(p, 1) for p in Path(real_dir).glob("*.jpg")] +
-            [(p, 1) for p in Path(real_dir).glob("*.png")] +
+            [(p, 1) for p in Path(real_dir).glob("*.png")]
+        )[:max_samples]
+        fake = (
             [(p, 0) for p in Path(fake_dir).glob("*.jpg")] +
             [(p, 0) for p in Path(fake_dir).glob("*.png")]
-        )
+        )[:max_samples]
+        self.samples = real + fake
         self.transform = transform
 
     def __len__(self):
@@ -51,11 +54,10 @@ class DeepfakeImageDataset(Dataset):
 
 class DeepfakeVideoDataset(Dataset):
     """Returns clip tensor (N, C, H, W). Label: 1 = Real, 0 = Fake"""
-    def __init__(self, real_dir, fake_dir, n_frames=8, transform=None):
-        self.samples = (
-            [(p, 1) for p in Path(real_dir).glob("*.mp4")] +
-            [(p, 0) for p in Path(fake_dir).glob("*.mp4")]
-        )
+    def __init__(self, real_dir, fake_dir, n_frames=8, transform=None, max_samples=10000):
+        real = [(p, 1) for p in Path(real_dir).glob("*.mp4")][:max_samples]
+        fake = [(p, 0) for p in Path(fake_dir).glob("*.mp4")][:max_samples]
+        self.samples = real + fake
         self.n_frames = n_frames
         self.transform = transform
 
@@ -86,5 +88,5 @@ class DeepfakeVideoDataset(Dataset):
             if self.transform:
                 f = self.transform(image=f)["image"]
             tensors.append(f)
-        clip = torch.stack(tensors, dim=0)  # (N, C, H, W)
-        return clip, torch.tensor(label, dtype=torch.float32) 
+        clip = torch.stack(tensors, dim=0)
+        return clip, torch.tensor(label, dtype=torch.float32)

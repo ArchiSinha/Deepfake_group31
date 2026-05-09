@@ -41,7 +41,7 @@ def train(mode="image"):
 
     # Dataset
     if mode == "image":
-        dataset = DeepfakeImageDataset(CFG.REAL_DIR, CFG.FAKE_DIR, transform)
+        dataset = DeepfakeImageDataset(CFG.REAL_DIR, CFG.FAKE_DIR, transform, CFG.MAX_SAMPLES)
         G = Generator().to(device)
         D = Discriminator().to(device)
     else:
