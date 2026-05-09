@@ -1,12 +1,20 @@
-from flask import Flask, render_template, url_for, request, session, flash, redirect
+import os
+
+from flask import Flask, render_template, url_for, request, session, flash, redirect, send_from_directory
 from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = "Rounak2004"
 app.permanent_session_lifetime = timedelta(minutes=10)
 
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -15,15 +23,30 @@ db = SQLAlchemy(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(200),nullable=False)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+
+
+class File(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(200), nullable=False)
+    uploaded_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
+def allowed_file(filename: str) -> bool:
+    allowed_extensions = {
+        "mp4", "mov", "avi", "mkv",
+        "png", "jpg", "jpeg", "gif", "bmp", "webp",
+        "mp3", "wav", "ogg", "m4a", "flac", "aac",
+    }
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
 
 
 @app.route("/")
 def home():
     if "user" in session:
-        return render_template("user.html", username=session["user"])
-    return render_template("register.html")
+        return render_template("user.html", user=session["user"])
+    return redirect(url_for("login"))
 
 @app.route("/register", methods = ["GET","POST"])
 def register():
@@ -53,7 +76,7 @@ def login():
         if user and check_password_hash(user.password,password):
             session["user"] = username
             flash("Logged in successfully", "success")
-            return redirect(url_for("user"))
+            return redirect(url_for("home"))
         elif not user: 
             flash("No such username register first","error")
             return redirect(url_for("register"))
@@ -98,6 +121,56 @@ def user():
 @app.route("/detect")
 def detect():
     return render_template("detect.html")
+
+
+
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    message = None
+    media_url = None
+    media_type = None
+
+    if request.method == "POST":
+        media = request.files.get("media")
+
+        if not media or media.filename == "":
+            message = "Please choose an image, audio, or video file to upload."
+        elif not allowed_file(media.filename):
+            message = "Unsupported file type. Upload an image, audio, or video file."
+        else:
+            filename = secure_filename(media.filename)
+            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            media.save(filepath)
+
+            new_file = File(filename=filename)
+            db.session.add(new_file)
+            db.session.commit()
+
+            media_url = url_for("uploaded_file", filename=filename)
+            mime_type = media.mimetype or ""
+            if mime_type.startswith("image/"):
+                media_type = "image"
+            elif mime_type.startswith("audio/"):
+                media_type = "audio"
+            elif mime_type.startswith("video/"):
+                media_type = "video"
+            else:
+                extension = filename.rsplit(".", 1)[1].lower()
+                if extension in {"png", "jpg", "jpeg", "gif", "bmp", "webp"}:
+                    media_type = "image"
+                elif extension in {"mp3", "wav", "ogg", "m4a", "flac", "aac"}:
+                    media_type = "audio"
+                else:
+                    media_type = "video"
+
+            message = "File uploaded successfully."
+
+    return render_template("upload.html", message=message, media_url=media_url, media_type=media_type)
+
+
+@app.route("/uploads/<path:filename>")
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 @app.route("/results")
