@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import random
 from PIL import Image
 from pathlib import Path
 
@@ -28,16 +29,18 @@ def get_transforms(img_size, mode="train"):
 
 
 class DeepfakeImageDataset(Dataset):
-    """Label: 1 = Real, 0 = Fake"""
+    """Label: 1 = Real, 0 = Fake. Random samples every instantiation."""
     def __init__(self, real_dir, fake_dir, transform=None, max_samples=10000):
-        real = (
+        real_all = (
             [(p, 1) for p in Path(real_dir).glob("*.jpg")] +
             [(p, 1) for p in Path(real_dir).glob("*.png")]
-        )[:max_samples]
-        fake = (
+        )
+        fake_all = (
             [(p, 0) for p in Path(fake_dir).glob("*.jpg")] +
             [(p, 0) for p in Path(fake_dir).glob("*.png")]
-        )[:max_samples]
+        )
+        real = random.sample(real_all, min(max_samples, len(real_all)))
+        fake = random.sample(fake_all, min(max_samples, len(fake_all)))
         self.samples = real + fake
         self.transform = transform
 
@@ -55,8 +58,10 @@ class DeepfakeImageDataset(Dataset):
 class DeepfakeVideoDataset(Dataset):
     """Returns clip tensor (N, C, H, W). Label: 1 = Real, 0 = Fake"""
     def __init__(self, real_dir, fake_dir, n_frames=8, transform=None, max_samples=10000):
-        real = [(p, 1) for p in Path(real_dir).glob("*.mp4")][:max_samples]
-        fake = [(p, 0) for p in Path(fake_dir).glob("*.mp4")][:max_samples]
+        real_all = [(p, 1) for p in Path(real_dir).glob("*.mp4")]
+        fake_all = [(p, 0) for p in Path(fake_dir).glob("*.mp4")]
+        real = random.sample(real_all, min(max_samples, len(real_all)))
+        fake = random.sample(fake_all, min(max_samples, len(fake_all)))
         self.samples = real + fake
         self.n_frames = n_frames
         self.transform = transform
