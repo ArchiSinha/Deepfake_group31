@@ -11,7 +11,7 @@ from config import CFG
 from dataset import DeepfakeImageDataset, DeepfakeVideoDataset, get_transforms
 from generator import Generator
 from discriminator import Discriminator, VideoDiscriminator
-from losses import discriminator_loss, generator_loss
+from losses import generator_loss, bce_loss
 
 
 def save_checkpoint(epoch, G, D, opt_G, opt_D, path):
@@ -91,9 +91,15 @@ def train(mode="image"):
             fake_preds = D(fake_imgs) if mode == "image" else D(
                 fake_imgs.unsqueeze(1).expand_as(clips)
             )
-            loss_D = discriminator_loss(real_preds, fake_preds)
-            loss_D.backward()
-            opt_D.step()
+            # Label smoothing
+            real_labels = torch.ones_like(real_preds) * 0.9
+            fake_labels = torch.zeros_like(fake_preds)
+            loss_D = (bce_loss(real_preds, real_labels) + bce_loss(fake_preds, fake_labels)) / 2
+
+            # Only update D if not too dominant
+            if loss_D.item() > 0.1:
+                loss_D.backward()
+                opt_D.step()
 
             # ── Train Generator ──
             opt_G.zero_grad()

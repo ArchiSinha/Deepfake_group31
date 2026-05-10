@@ -23,7 +23,7 @@ def predict_image(image_path, ckpt_path, device=CFG.DEVICE):
     D.eval()
 
     with torch.no_grad():
-        score = D(tensor).item()
+        score = torch.sigmoid(D(tensor)).item()
 
     label = "REAL" if score >= 0.5 else "FAKE"
     print(f"  Prediction : {label}")
@@ -56,7 +56,7 @@ def predict_video(video_path, ckpt_path, device=CFG.DEVICE, n_frames=CFG.FRAMES_
     D.eval()
 
     with torch.no_grad():
-        score = D(clip).item()
+        score = torch.sigmoid(D(clip)).item()
 
     label = "REAL" if score >= 0.5 else "FAKE"
     print(f"  Prediction : {label}")

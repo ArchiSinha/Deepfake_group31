@@ -15,7 +15,7 @@ def get_transforms(img_size, mode="train"):
             A.Resize(img_size, img_size),
             A.HorizontalFlip(p=0.5),
             A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, p=0.4),
-            A.GaussNoise(var_limit=(5, 30), p=0.3),
+            A.GaussNoise(noise_scale_factor=0.05, p=0.3),
             A.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5)),
             ToTensorV2(),
         ])
