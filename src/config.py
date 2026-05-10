@@ -1,13 +1,9 @@
 import torch
 
 class CFG:
-    # Local paths
-    DATA_ROOT    = "C:/deepfake_project/data"
-    REAL_DIR     = f"{DATA_ROOT}/real"
-    FAKE_DIR     = f"{DATA_ROOT}/fake"
-    CKPT_DIR     = "C:/deepfake_project/checkpoints"
-
-    # Training
+    REAL_DIR          = "/content/frames/real"
+    FAKE_DIR          = "/content/frames/fake"
+    CKPT_DIR          = "/content/drive/MyDrive/deepfake_checkpoints"
     IMG_SIZE          = 256
     BATCH_SIZE        = 8
     NUM_EPOCHS        = 15
@@ -17,11 +13,7 @@ class CFG:
     BETA2             = 0.999
     LAMBDA_L1         = 10.0
     SAVE_EVERY        = 5
-    MAX_SAMPLES       = 5000
-
-    # Video
+    MAX_SAMPLES       = 3000
     FRAMES_PER_CLIP   = 8
-
-    # Device
     DEVICE            = "cuda" if torch.cuda.is_available() else "cpu"
     SEED              = 42
