@@ -91,25 +91,22 @@ def train(mode="image"):
             fake_preds = D(fake_imgs) if mode == "image" else D(
                 fake_imgs.unsqueeze(1).expand_as(clips)
             )
-            # Label smoothing
             real_labels = torch.ones_like(real_preds) * 0.9
             fake_labels = torch.zeros_like(fake_preds)
             loss_D = (bce_loss(real_preds, real_labels) + bce_loss(fake_preds, fake_labels)) / 2
+            loss_D.backward()
+            opt_D.step()
 
-            # Only update D if not too dominant
-            if loss_D.item() > 0.1:
-                loss_D.backward()
-                opt_D.step()
-
-            # ── Train Generator ──
-            opt_G.zero_grad()
-            fake_imgs  = G(real_imgs)
-            fake_preds = D(fake_imgs) if mode == "image" else D(
-                fake_imgs.unsqueeze(1).expand_as(clips)
-            )
-            loss_G = generator_loss(fake_preds, fake_imgs, real_imgs, CFG.LAMBDA_L1)
-            loss_G.backward()
-            opt_G.step()
+            # ── Train Generator (2x per D update) ──
+            for _ in range(2):
+                opt_G.zero_grad()
+                fake_imgs  = G(real_imgs)
+                fake_preds = D(fake_imgs) if mode == "image" else D(
+                    fake_imgs.unsqueeze(1).expand_as(clips)
+                )
+                loss_G = generator_loss(fake_preds, fake_imgs, real_imgs, CFG.LAMBDA_L1)
+                loss_G.backward()
+                opt_G.step()
 
             total_G += loss_G.item()
             total_D += loss_D.item()

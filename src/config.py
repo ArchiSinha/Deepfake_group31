@@ -11,7 +11,7 @@ class CFG:
     IMG_SIZE          = 256
     BATCH_SIZE        = 8
     NUM_EPOCHS        = 15
-    LR_G              = 2e-4
+    LR_G              = 5e-4
     LR_D              = 2e-4
     BETA1             = 0.5
     BETA2             = 0.999
