@@ -34,12 +34,11 @@ print(f"✔ VideoDiscriminator OK: {score.shape}")
 fake = G(x)
 rp = D(x)
 fp = D(fake.detach())
-real_labels = torch.ones_like(rp) * 0.9
+real_labels = torch.ones_like(rp)
 fake_labels = torch.zeros_like(fp)
 ld = (bce_loss(rp, real_labels) + bce_loss(fp, fake_labels)) / 2
 lg = generator_loss(D(fake), fake, x)
 print(f"✔ Losses OK — Loss_D: {ld.item():.4f}  Loss_G: {lg.item():.4f}")
-
 # ── Test Backward Pass ──────────────────────────────────
 ld.backward()
 lg.backward()

@@ -9,15 +9,15 @@ class CFG:
 
     # Training
     IMG_SIZE          = 256
-    NUM_EPOCHS        = 1
     BATCH_SIZE        = 8
+    NUM_EPOCHS        = 15
     LR_G              = 2e-4
-    LR_D              = 1e-4
+    LR_D              = 2e-4
     BETA1             = 0.5
     BETA2             = 0.999
     LAMBDA_L1         = 10.0
     SAVE_EVERY        = 5
-    MAX_SAMPLES       = 10
+    MAX_SAMPLES       = 5000
 
     # Video
     FRAMES_PER_CLIP   = 8
