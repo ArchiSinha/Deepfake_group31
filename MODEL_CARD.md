@@ -10,18 +10,18 @@
 
 ## Dataset
 - **Name:** Celeb-DF-v2
-- **Real frames:** 3993
-- **Fake frames:** 4000
-- **Total:** 7993 frames
+- **Training frames (subset):** 3993 real, 4000 fake
+- **Test frames (subset):** 704 real, 6768 fake
 
-## Performance
+## Performance (on 15% test subset)
 | Metric | Score |
 |--------|-------|
-| Accuracy | 96.55% |
-| AUC-ROC | 96.55% |
-| F1 Score | 96.52% |
-| Precision | 96.52% |
-| Recall | 96.52% |
+| Accuracy | 97.00% |
+| AUC-ROC | 99.72% |
+| F1 Score | 97.00% |
+| Precision | 97.00% |
+| Recall | 97.00% |
+| Specificity | 97.00% |
 
 ## Training Details
 | Parameter | Value |
