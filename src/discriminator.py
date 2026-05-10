@@ -21,7 +21,6 @@ class Discriminator(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.3),
             nn.Linear(512, 1),
-            nn.Sigmoid()
         )
 
     def forward(self, x):
@@ -50,7 +49,6 @@ class VideoDiscriminator(nn.Module):
         )
         self.classifier = nn.Sequential(
             nn.Linear(512, 1),
-            nn.Sigmoid()
         )
 
     def forward(self, x):
