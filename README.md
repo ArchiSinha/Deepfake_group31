@@ -3,7 +3,7 @@
 **Group 31 | Academy of Technology | Final Year Project**
 
 ## Members
-- Rounak Ghosal (169001230071)
+- Rounak Ghosal (16900123071)
 - Dyutimay Ghosh (16900123177)
 - Bidisha Maji (16900123170)
 - Archisman Sinha (16900123021)
@@ -20,4 +20,4 @@ Prof. Abhishek Majumdar, Associate Professor, CSE
 | 03_evaluation |  | Metrics, ROC, confidence scoring |
 
 ## Tech Stack
-PyTorch · EfficientNet-B0 · MTCNN · OpenCV · Google Colab T4
+PyTorch · EfficientNet-B0 · MTCNN · OpenCV · Google Colab T4 . Flask . JavaScript

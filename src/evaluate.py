@@ -40,7 +40,7 @@ def evaluate_model(ckpt_path, mode="image"):
     with torch.no_grad():
         for data, labels in loader:
             data = data.to(device)
-            scores = D(data).squeeze(1).cpu().numpy()
+            scores = torch.sigmoid(D(data)).squeeze(1).cpu().numpy()
             preds  = (scores >= 0.5).astype(int)
             all_preds.extend(preds)
             all_labels.extend(labels.numpy().astype(int))
