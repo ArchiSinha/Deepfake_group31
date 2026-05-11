@@ -6,25 +6,22 @@
 <section class="section">
     <div class="container card">
         <h1>Upload Media</h1>
+
         {% if message %}
         <div class="alert">
             {{ message }}
         </div>
         {% endif %}
-        <form method="post" enctype="multipart/form-data">
-            <div style="display:flex;flex-direction:column;gap:14px;">
-                <input type="file" name="media" accept="image/*,audio/*,video/*" required
-                    style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:#0f1218;color:#e8edf5;" />
-                <button type="submit" class="btn btn-primary">Upload</button>
-            </div>
-        </form>
 
-        {% if media_url and media_type == 'image' %}
+        {% if media_url %}
+
+        {% if media_type == 'image' %}
         <div style="margin-top:20px;">
             <h2>Preview</h2>
             <img src="{{ media_url }}" alt="Uploaded image" style="max-width:100%;border-radius:14px;" />
         </div>
-        {% elif media_url and media_type == 'audio' %}
+
+        {% elif media_type == 'audio' %}
         <div style="margin-top:20px;">
             <h2>Preview</h2>
             <audio controls style="width:100%;">
@@ -32,7 +29,8 @@
                 Your browser does not support audio playback.
             </audio>
         </div>
-        {% elif media_url and media_type == 'video' %}
+
+        {% elif media_type == 'video' %}
         <div style="margin-top:20px;">
             <h2>Preview</h2>
             <video controls style="width:100%;max-height:480px;border-radius:14px;">
@@ -41,6 +39,28 @@
             </video>
         </div>
         {% endif %}
+
+        <div style="display:flex;gap:12px;margin-top:20px;">
+            <a href="{{ url_for('upload') }}" class="btn" style="background:#1e2435;color:#e8edf5;">
+                ← Upload Another
+            </a>
+            <a href="{{ url_for('results') }}?file={{ media_url | urlencode }}" class="btn btn-primary">
+                Analyse →
+            </a>
+        </div>
+
+        {% else %}
+        {# ── DEFAULT STATE: show the upload form ── #}
+        <form method="post" enctype="multipart/form-data">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                <input type="file" name="media" accept="image/*,audio/*,video/*" required style="padding:12px;border-radius:10px;
+                                  border:1px solid rgba(255,255,255,0.12);
+                                  background:#0f1218;color:#e8edf5;" />
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </div>
+        </form>
+        {% endif %}
+
     </div>
 </section>
 {% endblock %}

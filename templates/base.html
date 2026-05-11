@@ -521,7 +521,20 @@
 
         .btn-outline:hover {
             background: var(--accent-dim);
-            border-color: var(--accent);
+        }
+
+        /* Logout link */
+        .nav-logout {
+            color: var(--danger) !important;
+        }
+
+        .nav-logout:hover {
+            background: rgba(255, 77, 109, 0.1) !important;
+            color: #ff6b88 !important;
+        }
+
+        .nav-logout i {
+            opacity: 1 !important;
         }
 
         .card {
@@ -592,6 +605,13 @@
                         <i class="fa-solid fa-circle-info"></i> About
                     </a>
                 </li>
+                {% if session.get('user') %}
+                <li>
+                    <a href="{{ url_for('logout') }}" class="nav-link nav-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </a>
+                </li>
+                {% endif %}
             </ul>
 
             <!-- Status badge -->
@@ -616,6 +636,11 @@
         <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">
             <i class="fa-solid fa-circle-info"></i> About
         </a>
+        {% if session.get('user') %}
+        <a href="{{ url_for('logout') }}" class="nav-link nav-logout">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+        {% endif %}
         <div class="nav-status">
             <span class="pulse"></span> Model Online
         </div>
