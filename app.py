@@ -23,7 +23,8 @@ db = SQLAlchemy(app)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=True)
     password = db.Column(db.String(200), nullable=False)
 
 
@@ -48,41 +49,48 @@ def home():
         return render_template("user.html", user=session["user"])
     return redirect(url_for("login"))
 
-@app.route("/register", methods = ["GET","POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form["username"]
-        password =  generate_password_hash(request.form["password"])
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash("Username already exists","error")
+        email = request.form["email"]
+        password = generate_password_hash(request.form["password"])
+
+        if User.query.filter_by(username=username).first():
+            flash("Username already exists", "error")
             return redirect(url_for("register"))
-        
-        new_user = User(username=username,password=password)
+
+        if User.query.filter_by(email=email).first():
+            flash("Email already registered", "error")
+            return redirect(url_for("register"))
+
+        new_user = User(username=username, email=email, password=password)
         db.session.add(new_user)
         db.session.commit()
         flash("Registered in successfully", "success")
-        return redirect(url_for("login")) 
+        return redirect(url_for("login"))
+
     return render_template("register.html")
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == "POST":
-        session.permanent = True
+    if request.method == 'POST':
+        identifier = request.form['identifier']
+        password = request.form['password']
 
-        username = request.form["username"]
-        password = request.form["password"]
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password,password):
-            session["user"] = username
-            flash("Logged in successfully", "success")
-            return redirect(url_for("home"))
-        elif not user: 
-            flash("No such username register first","error")
-            return redirect(url_for("register"))
+        if '@' in identifier:
+            user = User.query.filter_by(email=identifier).first()
         else:
-            flash("Invalid username or password","error")  
-    return render_template("login.html")   
+            user = User.query.filter_by(username=identifier).first()
+
+        if user and check_password_hash(user.password, password):
+            session['user'] = user.username
+            session['email'] = user.email
+            return redirect(url_for('user'))
+        else:
+            flash('Invalid credentials', "error")
+
+    return render_template('login.html')
 
 
 

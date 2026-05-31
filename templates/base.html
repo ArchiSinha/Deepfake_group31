@@ -229,6 +229,18 @@
             box-shadow: var(--accent-glow);
         }
 
+        .nav-link.logout-link {
+            color: var(--danger);
+        }
+
+        .nav-link.logout-link:hover {
+            background: rgba(255, 77, 109, 0.1);
+        }
+
+        .desktop-logout {
+            flex-shrink: 0;
+        }
+
         /* Status badge */
         .nav-status {
             display: flex;
@@ -521,20 +533,7 @@
 
         .btn-outline:hover {
             background: var(--accent-dim);
-        }
-
-        /* Logout link */
-        .nav-logout {
-            color: var(--danger) !important;
-        }
-
-        .nav-logout:hover {
-            background: rgba(255, 77, 109, 0.1) !important;
-            color: #ff6b88 !important;
-        }
-
-        .nav-logout i {
-            opacity: 1 !important;
+            border-color: var(--accent);
         }
 
         .card {
@@ -554,7 +553,8 @@
         @media (max-width: 768px) {
 
             .nav-links,
-            .nav-status {
+            .nav-status,
+            .desktop-logout {
                 display: none;
             }
 
@@ -605,13 +605,6 @@
                         <i class="fa-solid fa-circle-info"></i> About
                     </a>
                 </li>
-                {% if session.get('user') %}
-                <li>
-                    <a href="{{ url_for('logout') }}" class="nav-link nav-logout">
-                        <i class="fa-solid fa-right-from-bracket"></i> Logout
-                    </a>
-                </li>
-                {% endif %}
             </ul>
 
             <!-- Status badge -->
@@ -619,6 +612,12 @@
                 <span class="pulse" aria-hidden="true"></span>
                 Model Online
             </div>
+
+            {% if session.get('user') %}
+            <a href="{{ url_for('logout') }}" class="nav-link logout-link desktop-logout" aria-label="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+            {% endif %}
 
             <!-- Mobile toggle -->
             <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
@@ -637,7 +636,7 @@
             <i class="fa-solid fa-circle-info"></i> About
         </a>
         {% if session.get('user') %}
-        <a href="{{ url_for('logout') }}" class="nav-link nav-logout">
+        <a href="{{ url_for('logout') }}" class="nav-link logout-link">
             <i class="fa-solid fa-right-from-bracket"></i> Logout
         </a>
         {% endif %}
