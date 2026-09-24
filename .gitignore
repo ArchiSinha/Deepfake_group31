@@ -24,3 +24,12 @@ Thumbs.db
 
 # Previously cloned repo folder
 Deepfake_group31/
+data/
+*.pth
+*.pt
+*.onnx
+*.pkl
+logs/
+uploads/
+*.db
+*.sqlite
