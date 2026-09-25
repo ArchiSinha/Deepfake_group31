@@ -126,55 +126,60 @@ def user():
         return redirect(url_for("login"))
 
 
-@app.route("/detect")
-def detect():
-    return render_template("detect.html")
 
 
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
-    message = None
-    media_url = None
-    media_type = None
-
     if request.method == "POST":
         media = request.files.get("media")
 
         if not media or media.filename == "":
-            message = "Please choose an image, audio, or video file to upload."
+            flash("Please choose an image, audio, or video file to upload.", "error")
+            return redirect(url_for("upload"))
         elif not allowed_file(media.filename):
-            message = "Unsupported file type. Upload an image, audio, or video file."
+            flash("Unsupported file type. Upload an image, audio, or video file.", "error")
+            return redirect(url_for("upload"))
+
+        filename = secure_filename(media.filename)
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        media.save(filepath)
+
+        new_file = File(filename=filename)
+        db.session.add(new_file)
+        db.session.commit()
+
+        flash("File uploaded successfully.", "success")
+        return redirect(url_for("upload", uploaded=filename))
+
+    media_url = None
+    media_type = None
+    uploaded = request.args.get("uploaded")
+
+    if uploaded:
+        media_url = url_for("uploaded_file", filename=uploaded)
+        ext = uploaded.rsplit(".", 1)[1].lower()
+        if ext in {"png", "jpg", "jpeg", "gif", "bmp", "webp"}:
+            media_type = "image"
+        elif ext in {"mp3", "wav", "ogg", "m4a", "flac", "aac"}:
+            media_type = "audio"
         else:
-            filename = secure_filename(media.filename)
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            media.save(filepath)
+            media_type = "video"
 
-            new_file = File(filename=filename)
-            db.session.add(new_file)
-            db.session.commit()
+    return render_template("upload.html", media_url=media_url, media_type=media_type, uploaded_filename=uploaded)
 
-            media_url = url_for("uploaded_file", filename=filename)
-            mime_type = media.mimetype or ""
-            if mime_type.startswith("image/"):
-                media_type = "image"
-            elif mime_type.startswith("audio/"):
-                media_type = "audio"
-            elif mime_type.startswith("video/"):
-                media_type = "video"
-            else:
-                extension = filename.rsplit(".", 1)[1].lower()
-                if extension in {"png", "jpg", "jpeg", "gif", "bmp", "webp"}:
-                    media_type = "image"
-                elif extension in {"mp3", "wav", "ogg", "m4a", "flac", "aac"}:
-                    media_type = "audio"
-                else:
-                    media_type = "video"
+@app.route('/delete-file', methods=['POST'])
+def delete_file():
+    filename = request.form.get('filename')
 
-            message = "File uploaded successfully."
+    if filename:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-    return render_template("upload.html", message=message, media_url=media_url, media_type=media_type)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            flash('File deleted successfully.')
 
+    return redirect(url_for('upload'))
 
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
@@ -189,6 +194,36 @@ def results():
 @app.route("/about")
 def about():
     return render_template("about.html")
+
+@app.route('/detect', methods=['GET', 'POST'])
+def detect():
+    if request.method == 'POST':
+        filename = request.form.get('filename')
+
+        if not filename:
+            return redirect(url_for('upload'))
+
+        file_path = os.path.join(
+            app.config['UPLOAD_FOLDER'],
+            filename
+        )
+
+        if not os.path.exists(file_path):
+            return redirect(url_for('upload'))
+
+        # ---------------------------------
+        # YOUR DETECTION MODEL GOES HERE
+        # ---------------------------------
+        return render_template(
+            'detect.html',
+            filename=filename,
+            file_path=file_path
+        )
+
+    return render_template('detect.html')
+    
+
+    
 
 
 @app.route("/logout")
