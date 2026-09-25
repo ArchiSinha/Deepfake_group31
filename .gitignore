@@ -33,3 +33,7 @@ logs/
 uploads/
 *.db
 *.sqlite
+checkpoints/*
+outputs/
+benchmarks/
+.ipynb_checkpoints/
