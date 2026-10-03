@@ -286,7 +286,8 @@ def process_frame_batch(
     dry_run: bool
 ) -> List[Tuple[str, Dict]]:
     """
-    Process a batch of frames with batched MTCNN inference.
+    Process a batch of frames with batched MTCNN inference, falling back to
+    per-image detection if the batched call fails (e.g. mismatched image sizes).
 
     Args:
         frame_batch: List of (frame_path, out_path) tuples
@@ -298,149 +299,121 @@ def process_frame_batch(
         dry_run: Don't write files
 
     Returns:
-        List of (status, metadata) tuples, one per frame in batch
+        List of (status, metadata) tuples, one per frame, in the same order
+        as frame_batch. status is one of: "success", "no_face",
+        "low_confidence", "read_error", "detector_error", "save_error",
+        "skipped". metadata contains: det_prob, box, crop_side_px, n_faces.
     """
-    results = []
-
-    # Prepare batch data
+    results: List[Optional[Tuple[str, Dict]]] = [None] * len(frame_batch)
     batch_data = []
-    for frame_path, out_path in frame_batch:
-        metadata = {
-            "det_prob": None,
-            "box": None,
-            "crop_side_px": None,
-            "n_faces": 0
-        }
+    positions = []
 
-        # Resume check
+    for i, (frame_path, out_path) in enumerate(frame_batch):
+        metadata = {"det_prob": None, "box": None, "crop_side_px": None, "n_faces": 0}
+
         if resume and out_path.exists() and out_path.stat().st_size > 0:
-            results.append(("skipped", metadata))
-            batch_data.append(None)
+            results[i] = ("skipped", metadata)
             continue
 
         try:
-            # Read frame
             frame_bgr = cv2.imread(str(frame_path))
             if frame_bgr is None:
-                results.append(("read_error", metadata))
-                batch_data.append(None)
+                results[i] = ("read_error", metadata)
                 continue
-
-            # Convert BGR to RGB for MTCNN
             frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
             pil_image = Image.fromarray(frame_rgb)
-
-            batch_data.append({
-                "frame_bgr": frame_bgr,
-                "pil_image": pil_image,
-                "frame_path": frame_path,
-                "out_path": out_path,
-                "metadata": metadata
-            })
         except Exception as e:
             logging.error(f"Error reading {frame_path.name}: {e}")
-            results.append(("read_error", metadata))
-            batch_data.append(None)
+            results[i] = ("read_error", metadata)
+            continue
 
-    # Extract valid images for batched detection
-    valid_indices = [i for i, data in enumerate(batch_data) if data is not None]
-    valid_images = [batch_data[i]["pil_image"] for i in valid_indices]
+        batch_data.append({
+            "frame_bgr": frame_bgr,
+            "pil_image": pil_image,
+            "frame_path": frame_path,
+            "out_path": out_path,
+            "metadata": metadata,
+        })
+        positions.append(i)
 
-    # Run batched MTCNN detection
-    # facenet-pytorch MTCNN.detect() accepts a list of PIL Images of different sizes
-    batch_boxes = [None] * len(valid_images)
-    batch_probs = [None] * len(valid_images)
+    if not batch_data:
+        return results
 
-    if valid_images:
-        try:
-            # Batched detection: returns lists of boxes and probs, one per image
-            result = detector.detect(valid_images)
+    valid_images = [d["pil_image"] for d in batch_data]
 
-            # Handle both tuple (boxes, probs) and list of tuples formats
-            if isinstance(result, tuple) and len(result) == 2:
-                boxes_result, probs_result = result
+    try:
+        batch_boxes, batch_probs = detector.detect(valid_images)
+        batch_boxes = list(batch_boxes)
+        batch_probs = list(batch_probs)
+        if len(batch_boxes) != len(valid_images):
+            raise ValueError(
+                f"detector returned {len(batch_boxes)} results for {len(valid_images)} images"
+            )
+    except Exception as e:
+        logging.warning(f"Batched detection failed ({e}); falling back to per-image detection")
+        batch_boxes = []
+        batch_probs = []
+        for img in valid_images:
+            try:
+                b, p = detector.detect(img)
+                batch_boxes.append(b)
+                batch_probs.append(p)
+            except Exception as e2:
+                logging.warning(f"Per-image detector failed: {e2}")
+                batch_boxes.append("__DETECTOR_ERROR__")
+                batch_probs.append("__DETECTOR_ERROR__")
 
-                # If single image was passed and result is not a list, wrap it
-                if not isinstance(boxes_result, list):
-                    batch_boxes = [boxes_result]
-                    batch_probs = [probs_result]
-                else:
-                    batch_boxes = boxes_result
-                    batch_probs = probs_result
-            else:
-                # Unexpected format
-                batch_boxes = [None] * len(valid_images)
-                batch_probs = [None] * len(valid_images)
-
-        except Exception as e:
-            logging.warning(f"Batched detector failed: {e}")
-            # Fall back to None for all
-            batch_boxes = [None] * len(valid_images)
-            batch_probs = [None] * len(valid_images)
-
-    # Process detection results for each valid image
-    valid_results_idx = 0
-    for i, data in enumerate(batch_data):
-        if data is None:
-            continue  # Already added to results
-
+    for j, data in enumerate(batch_data):
+        i = positions[j]
         metadata = data["metadata"]
-        frame_bgr = data["frame_bgr"]
         frame_path = data["frame_path"]
         out_path = data["out_path"]
+        frame_bgr = data["frame_bgr"]
 
-        boxes = batch_boxes[valid_results_idx]
-        probs = batch_probs[valid_results_idx]
-        valid_results_idx += 1
+        boxes = batch_boxes[j]
+        probs = batch_probs[j]
+
+        if isinstance(boxes, str) and boxes == "__DETECTOR_ERROR__":
+            results[i] = ("detector_error", metadata)
+            continue
 
         try:
-            # Handle no detections
             if boxes is None or len(boxes) == 0:
-                results.append(("no_face", metadata))
+                results[i] = ("no_face", metadata)
                 continue
 
             metadata["n_faces"] = len(boxes)
-
-            # Select largest face by area
-            areas = [(box[2] - box[0]) * (box[3] - box[1]) for box in boxes]
+            areas = [(b[2] - b[0]) * (b[3] - b[1]) for b in boxes]
             idx = np.argmax(areas)
             box = boxes[idx]
             prob = probs[idx]
-
             metadata["det_prob"] = float(prob)
 
-            # Check confidence threshold
             if prob < min_prob:
-                results.append(("low_confidence", metadata))
+                results[i] = ("low_confidence", metadata)
                 continue
 
-            # Expand and square box
             h, w = frame_bgr.shape[:2]
-            expanded_box = expand_box(
-                tuple(box.tolist()),
-                margin,
-                (h, w)
-            )
+            box_tuple = tuple(box.tolist()) if hasattr(box, "tolist") else tuple(box)
+            expanded_box = expand_box(box_tuple, margin, (h, w))
             metadata["box"] = expanded_box
             metadata["crop_side_px"] = expanded_box[2] - expanded_box[0]
 
-            # Crop with padding and resize
             crop = clamp_and_pad(frame_bgr, expanded_box, target_size)
 
-            # Save
             if not dry_run:
                 try:
                     atomic_save(crop, out_path, quality=95)
                 except IOError as e:
                     logging.warning(f"Save failed for {frame_path.name}: {e}")
-                    results.append(("save_error", metadata))
+                    results[i] = ("save_error", metadata)
                     continue
 
-            results.append(("success", metadata))
+            results[i] = ("success", metadata)
 
         except Exception as e:
             logging.error(f"Unexpected error processing {frame_path.name}: {e}")
-            results.append(("detector_error", metadata))
+            results[i] = ("detector_error", metadata)
 
     return results
 

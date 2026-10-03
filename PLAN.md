@@ -8,14 +8,14 @@
 
 ## Current Status / Next Step
 
-**Last updated:** 2026-09-24
+**Last updated:** 2026-10-03
 
-**Status:** Plan under revision — applying BATCH 1 amendments.
+**Status:** src/preprocess_faces.py complete and tested
 
 **Next steps:** 
-1. Finish all amendments to PLAN.md (BATCH 1 in progress)
-2. Create CLAUDE.md (project context for Claude Code)
-3. Implement `src/preprocess_faces.py`
+1. src/make_splits.py (identity-disjoint split)
+2. verify split with no cross-split identity leakage
+3. update config.py/dataset.py/discriminator.py
 
 **Blockers:** None.
 

@@ -269,11 +269,11 @@ def test_process_frame_success():
 
         out_path = tmpdir / "out_f0.jpg"
 
-        # Mock detector
+        # Mock detector — returns (list_of_boxes, list_of_probs), one entry per image
         mock_detector = Mock()
         mock_detector.detect.return_value = (
-            np.array([[100, 100, 300, 300]]),  # boxes
-            np.array([0.95])  # probs
+            [np.array([[100, 100, 300, 300]])],  # boxes: list of per-image arrays
+            [np.array([0.95])]  # probs: list of per-image arrays
         )
 
         status, metadata = process_frame(
@@ -305,9 +305,9 @@ def test_process_frame_no_face():
 
         out_path = tmpdir / "out_f0.jpg"
 
-        # Mock detector returning no faces
+        # Mock detector returning no faces — list format, one entry per image
         mock_detector = Mock()
-        mock_detector.detect.return_value = (None, None)
+        mock_detector.detect.return_value = ([None], [None])
 
         status, metadata = process_frame(
             frame_path=frame_path,
@@ -337,11 +337,11 @@ def test_process_frame_low_confidence():
 
         out_path = tmpdir / "out_f0.jpg"
 
-        # Mock detector with low confidence
+        # Mock detector with low confidence — list format, one entry per image
         mock_detector = Mock()
         mock_detector.detect.return_value = (
-            np.array([[100, 100, 300, 300]]),
-            np.array([0.75])  # Below 0.90 threshold
+            [np.array([[100, 100, 300, 300]])],
+            [np.array([0.75])]  # Below 0.90 threshold
         )
 
         status, metadata = process_frame(
@@ -371,14 +371,14 @@ def test_process_frame_multiple_faces():
 
         out_path = tmpdir / "out_f0.jpg"
 
-        # Mock detector with two faces (second is larger)
+        # Mock detector with two faces (second is larger) — list format, one entry per image
         mock_detector = Mock()
         mock_detector.detect.return_value = (
-            np.array([
+            [np.array([
                 [50, 50, 150, 150],    # 100x100 = 10,000
                 [200, 200, 450, 450]   # 250x250 = 62,500 (larger)
-            ]),
-            np.array([0.92, 0.95])
+            ])],
+            [np.array([0.92, 0.95])]
         )
 
         status, metadata = process_frame(
@@ -441,10 +441,11 @@ def test_process_frame_dry_run():
 
         out_path = tmpdir / "out_f0.jpg"
 
+        # Mock detector — list format, one entry per image
         mock_detector = Mock()
         mock_detector.detect.return_value = (
-            np.array([[100, 100, 300, 300]]),
-            np.array([0.95])
+            [np.array([[100, 100, 300, 300]])],
+            [np.array([0.95])]
         )
 
         status, metadata = process_frame(
