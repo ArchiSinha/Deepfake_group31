@@ -39,3 +39,6 @@ Final-year B.Tech capstone project. Full design: see PLAN.md.
 - Never commit data files, `.pth`, `.onnx`, or Google Drive paths. Never overwrite checkpoints.
 - Show diff summary and stop after every step.
 - If PLAN.md and user message disagree, ask the user.
+
+## Known issue (unresolved)
+src/preprocess_faces.py batch processing has an index/detector-error bug in process_frame_batch. A fix was drafted in chat (full replacement function) but not yet confirmed working due to API connection issues. Pick up from there next session.
