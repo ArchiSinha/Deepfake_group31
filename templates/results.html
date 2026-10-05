@@ -5,9 +5,87 @@
 {% block content %}
 <section class="section">
     <div class="container card">
+
         <h1>Results</h1>
-        <p style="color:var(--text-secondary);">Your detection results will appear here once the system is connected.
+
+        {% if filename %}
+        <p style="margin-bottom:12px;">Analysed file: <strong>{{ filename }}</strong></p>
+        {% endif %}
+
+        <!-- MEDIA PREVIEW -->
+        {% if media_url and media_type == 'image' %}
+        <img src="{{ media_url }}" alt="Analysed image" style="max-width:100%; max-height:420px; border-radius:14px;" />
+        {% elif media_url and media_type == 'video' %}
+        <video controls style="width:100%; max-height:420px; border-radius:14px;">
+            <source src="{{ media_url }}" />
+            Your browser does not support video playback.
+        </video>
+        {% elif media_url and media_type == 'audio' %}
+        <audio controls style="width:100%;">
+            <source src="{{ media_url }}" />
+        </audio>
+        {% endif %}
+
+        <!-- RESULT -->
+        {% if not result %}
+        <p style="color:var(--text-secondary); margin-top:20px;">No result to show. Upload a file and press Detect.</p>
+
+        {% elif result.status == 'ok' %}
+        {% set is_fake = (result.label == 'FAKE') %}
+        <div style="margin-top:24px; padding:20px; border-radius:14px;
+                    border:1px solid {{ '#e63946' if is_fake else '#00e6a0' }};
+                    background:{{ 'rgba(230,57,70,0.08)' if is_fake else 'rgba(0,230,160,0.08)' }};">
+            <div style="font-size:0.85rem; letter-spacing:1px; color:var(--text-secondary, #8892a4);">VERDICT</div>
+            <div style="font-size:2rem; font-weight:700; color:{{ '#e63946' if is_fake else '#00e6a0' }};">
+                {{ 'Likely FAKE' if is_fake else 'Likely REAL' }}
+            </div>
+            <div style="margin-top:4px;">Model confidence: <strong>{{ "%.1f"|format(result.confidence * 100) }}%</strong></div>
+        </div>
+
+        <!-- Fake-score bar (the line at 50% is the decision boundary) -->
+        <div style="margin-top:20px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-secondary, #8892a4);">
+                <span>Real</span><span>Fake score: {{ "%.3f"|format(result.fake_score) }}</span><span>Fake</span>
+            </div>
+            <div style="position:relative; height:12px; border-radius:6px; background:rgba(255,255,255,0.10); margin-top:6px;">
+                <div style="height:100%; width:{{ (result.fake_score * 100)|round(1) }}%; border-radius:6px;
+                            background:{{ '#e63946' if is_fake else '#00e6a0' }};"></div>
+                <div style="position:absolute; left:50%; top:-4px; height:20px; width:2px; background:#ffffff;"></div>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-secondary, #8892a4); margin-top:6px;">
+                The white line is the decision boundary. The fake score is a rescaled model score, not a calibrated probability.
+            </div>
+        </div>
+
+        <!-- DETAILS -->
+        <div style="margin-top:20px; font-size:0.9rem; color:var(--text-secondary, #8892a4); line-height:1.7;">
+            Media type: {{ result.media_type }}<br>
+            Frames sampled: {{ result.frames_sampled }} &bull; Frames with a face: {{ result.faces_used }}<br>
+            Analysis time: {{ result.inference_ms }} ms
+        </div>
+
+        <p style="margin-top:20px; font-size:0.8rem; color:var(--text-secondary, #8892a4);">
+            This model was trained on the Celeb-DF-v2 dataset only. It may miss deepfakes made with other methods or
+            AI-generated faces, so treat the result as one signal, not proof.
         </p>
+
+        {% elif result.status == 'no_face' %}
+        <div style="margin-top:24px; padding:20px; border-radius:14px; border:1px solid #f4a261; background:rgba(244,162,97,0.08);">
+            <strong>No face detected</strong>
+            <p style="margin-top:6px;">{{ result.message }} Try a clearer, front-facing image or a video where a face is visible.</p>
+        </div>
+
+        {% else %}
+        <div style="margin-top:24px; padding:20px; border-radius:14px; border:1px solid #f4a261; background:rgba(244,162,97,0.08);">
+            <strong>{{ 'Unsupported file' if result.status == 'unsupported' else 'Something went wrong' }}</strong>
+            <p style="margin-top:6px;">{{ result.message }}</p>
+        </div>
+        {% endif %}
+
+        <div style="margin-top:28px;">
+            <a href="{{ url_for('upload') }}" class="btn btn-primary">Analyse another file</a>
+        </div>
+
     </div>
 </section>
 {% endblock %}

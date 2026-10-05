@@ -2,7 +2,7 @@ import os
 
 from flask import Flask, render_template, url_for, request, session, flash, redirect, send_from_directory
 from datetime import timedelta
-
+from src.inference import analyze
 app = Flask(__name__)
 app.secret_key = "Rounak2004"
 app.permanent_session_lifetime = timedelta(minutes=10)
@@ -198,31 +198,35 @@ def about():
 @app.route('/detect', methods=['GET', 'POST'])
 def detect():
     if request.method == 'POST':
-        filename = request.form.get('filename')
+        filename = secure_filename(request.form.get('filename', ''))
 
         if not filename:
             return redirect(url_for('upload'))
 
-        file_path = os.path.join(
-            app.config['UPLOAD_FOLDER'],
-            filename
-        )
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
         if not os.path.exists(file_path):
             return redirect(url_for('upload'))
 
-        # ---------------------------------
-        # YOUR DETECTION MODEL GOES HERE
-        # ---------------------------------
+        result = analyze(file_path)
+
+        ext = filename.rsplit('.', 1)[-1].lower()
+        if ext in {"png", "jpg", "jpeg", "gif", "bmp", "webp"}:
+            media_type = "image"
+        elif ext in {"mp3", "wav", "ogg", "m4a", "flac", "aac"}:
+            media_type = "audio"
+        else:
+            media_type = "video"
+
         return render_template(
-            'detect.html',
+            'results.html',
             filename=filename,
-            file_path=file_path
+            media_url=url_for('uploaded_file', filename=filename),
+            media_type=media_type,
+            result=result,
         )
 
     return render_template('detect.html')
-    
-
     
 
 
