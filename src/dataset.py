@@ -35,6 +35,7 @@ class DeepfakeImageDataset(Dataset):
     def __init__(self, csv_path, frames_dir=CFG.FRAMES_DIR, transform=None):
         self.df = pd.read_csv(csv_path, dtype={"video_id": str})
         self.frames_dir = Path(frames_dir)
+        self.csv_path = Path(csv_path)
         self.transform = transform
 
     def __len__(self):
@@ -42,7 +43,14 @@ class DeepfakeImageDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
-        img = cv2.imread(str(self.frames_dir / row["path"]))
+        img_path = self.frames_dir / row["path"]
+
+        # CSV stores only the filename; images are inside train/val/test folders
+        if not img_path.exists():
+            split = self.csv_path.stem.replace("_faces", "")
+            img_path = self.frames_dir / split / row["path"]
+
+        img = cv2.imread(str(img_path))
         if img is None:
             raise FileNotFoundError(f"Could not read {row['path']}")
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

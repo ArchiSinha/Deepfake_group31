@@ -3,10 +3,10 @@ import torch
 
 class CFG:
     # ---- Data (run everything from the repo root) ----
-    FRAMES_DIR = "data/frames_cropped"
-    TRAIN_CSV  = "data/train.csv"
-    VAL_CSV    = "data/val.csv"
-    TEST_CSV   = "data/test.csv"
+    FRAMES_DIR = "data/face_crops"
+    TRAIN_CSV  = "data/train_faces.csv"
+    VAL_CSV    = "data/val_faces.csv"
+    TEST_CSV   = "data/test_faces.csv"
     CKPT_DIR   = "checkpoints"
 
     # ---- Label convention: 0 = Real, 1 = Fake. Model score = P(fake) ----
