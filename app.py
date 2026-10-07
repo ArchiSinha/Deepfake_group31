@@ -53,18 +53,14 @@ def home():
 def register():
     if request.method == "POST":
         username = request.form["username"]
-        email = request.form["email"]
         password = generate_password_hash(request.form["password"])
 
         if User.query.filter_by(username=username).first():
             flash("Username already exists", "error")
             return redirect(url_for("register"))
 
-        if User.query.filter_by(email=email).first():
-            flash("Email already registered", "error")
-            return redirect(url_for("register"))
 
-        new_user = User(username=username, email=email, password=password)
+        new_user = User(username=username, password=password)
         db.session.add(new_user)
         db.session.commit()
         flash("Registered in successfully", "success")
@@ -235,6 +231,7 @@ def logout():
     session.pop("user", None)
     flash("Logged out successfully!", "success")
     return redirect(url_for("login"))
+
 
 
 if __name__ == "__main__":
